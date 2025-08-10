@@ -49,26 +49,33 @@ fi
 # --- 4. Create config file ---
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "📝 Creating Ship config file..."
-    echo '{"default_domain": "", "deployments": {}}' > "$CONFIG_FILE"
+    echo '{"default_domain": "", "email": "", "deployments": {}}' > "$CONFIG_FILE"
 else
     echo "✅ Config file already exists at $CONFIG_FILE"
 fi
 
-# --- 5. Install ship script ---
-echo "⚙️ Installing ship command..."
-sudo cp scripts/ship "$SHIP_PATH"
-sudo chmod +x "$SHIP_PATH"
+# --- 5. Install ship script from repo ---
+if [ -f "scripts/ship" ]; then
+    echo "⚙️ Installing ship command..."
+    sudo cp scripts/ship "$SHIP_PATH"
+    sudo chmod +x "$SHIP_PATH"
+else
+    echo "❌ scripts/ship not found. Please run this installer from the repo root."
+    exit 1
+fi
 
-# --- 6. Install ship-build ---
-echo "⚙️ Installing ship-build command..."
-sudo tee "$SHIP_BUILD_PATH" >/dev/null <<'EOF'
-#!/bin/bash
-echo "🚀 Building project..."
-npm run build || { echo "❌ Build failed"; exit 1; }
-ship "$@"
-EOF
-sudo chmod +x "$SHIP_BUILD_PATH"
+# --- 6. Install ship-build script from repo ---
+if [ -f "scripts/ship-build" ]; then
+    echo "⚙️ Installing ship-build command..."
+    sudo cp scripts/ship-build "$SHIP_BUILD_PATH"
+    sudo chmod +x "$SHIP_BUILD_PATH"
+else
+    echo "❌ scripts/ship-build not found. Please run this installer from the repo root."
+    exit 1
+fi
 
 echo "✅ Ship installed successfully for user: $CURRENT_USER"
 echo "ℹ️  No default domain set. You must use -d <domain> or set one with:"
 echo "    ship --set-default-domain example.com"
+echo "ℹ️  No email set. You must set one with:"
+echo "    ship --set-email you@example.com"
