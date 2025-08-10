@@ -2,20 +2,26 @@
 
 CONFIG_FILE="$HOME/.shiprc"
 HOST_DIR="/home/$USER/hosted"
-EMAIL="you@example.com" # Change to your email for Let's Encrypt
 TEMPLATE="/etc/nginx/sites-available/react-template"
 
 load_config() {
     if [ ! -f "$CONFIG_FILE" ]; then
-        echo '{"default_domain": "", "deployments": {}}' > "$CONFIG_FILE"
+        echo '{"default_domain": "", "email": "", "deployments": {}}' > "$CONFIG_FILE"
     fi
     DEFAULT_DOMAIN=$(jq -r '.default_domain' "$CONFIG_FILE")
+    EMAIL=$(jq -r '.email' "$CONFIG_FILE")
 }
 
 set_default_domain() {
     local domain="$1"
     jq --arg domain "$domain" '.default_domain = $domain' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
     echo "✅ Default domain set to: $domain"
+}
+
+set_email() {
+    local email="$1"
+    jq --arg email "$email" '.email = $email' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+    echo "✅ Email set to: $email"
 }
 
 update_deployment_date() {
@@ -34,7 +40,7 @@ list_deployments() {
 }
 
 usage() {
-    echo "Usage: ship [-s subdomain] [-d domain] [-c] [-r] [--set-default-domain domain] [--list] [-h]"
+    echo "Usage: ship [-s subdomain] [-d domain] [-c] [-r] [--set-default-domain domain] [--set-email email] [--list] [-h]"
     echo
     echo "Options:"
     echo "  -s <subdomain>          Specify subdomain (optional for deploy, required for -c/-r)"
@@ -42,6 +48,7 @@ usage() {
     echo "  -c                      Renew SSL certificate"
     echo "  -r                      Remove deployment"
     echo "  --set-default-domain X  Set default base domain"
+    echo "  --set-email X           Set email for Let's Encrypt"
     echo "  --list                  List all deployments and last SSL renewal date"
     echo "  -h                      Show help"
     exit 0
@@ -55,6 +62,7 @@ while [[ $# -gt 0 ]]; do
         -c) ACTION="renew"; shift ;;
         -r) ACTION="remove"; shift ;;
         --set-default-domain) set_default_domain "$2"; exit 0 ;;
+        --set-email) set_email "$2"; exit 0 ;;
         --list) list_deployments; exit 0 ;;
         -h) usage ;;
         *) usage ;;
@@ -70,6 +78,11 @@ if [ -z "$BASE_DOMAIN" ]; then
         echo "❌ No base domain provided and no default set. Use -d or --set-default-domain."
         exit 1
     fi
+fi
+
+if [ -z "$EMAIL" ] || [ "$EMAIL" = "null" ]; then
+    echo "❌ No email set for Let's Encrypt. Use: ship --set-email you@example.com"
+    exit 1
 fi
 
 if [ -z "$SUBDOMAIN" ] && [ "$ACTION" = "deploy" ]; then
