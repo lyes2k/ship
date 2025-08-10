@@ -2,19 +2,21 @@
 
 set -e
 
+# --- CONFIG ---
 CURRENT_USER="$USER"
 HOST_DIR="/home/$CURRENT_USER/hosted"
 CONFIG_FILE="$HOME/.shiprc"
 TEMPLATE_PATH="/etc/nginx/sites-available/react-template"
 SHIP_PATH="/usr/local/bin/ship"
 SHIP_BUILD_PATH="/usr/local/bin/ship-build"
+REPO_RAW="https://raw.githubusercontent.com/lyes2k/ship/main"
 
 echo "🚀 Installing Ship deployment tool for user: $CURRENT_USER"
 
 # --- 1. Install dependencies ---
 echo "📦 Installing required packages..."
 sudo apt update
-sudo apt install -y nginx certbot python3-certbot-nginx jq rsync
+sudo apt install -y nginx certbot python3-certbot-nginx jq rsync curl
 
 # --- 2. Create hosting directory ---
 if [ ! -d "$HOST_DIR" ]; then
@@ -26,22 +28,10 @@ else
     echo "✅ Hosting directory already exists at $HOST_DIR"
 fi
 
-# --- 3. Create Nginx template ---
+# --- 3. Download Nginx template ---
 if [ ! -f "$TEMPLATE_PATH" ]; then
-    echo "📝 Creating Nginx template..."
-    sudo tee "$TEMPLATE_PATH" >/dev/null <<EOF
-server {
-    listen 80;
-    server_name SUBDOMAIN.BASEDOMAIN;
-
-    root $HOST_DIR/SUBDOMAIN;
-    index index.html;
-
-    location / {
-        try_files \$uri /index.html;
-    }
-}
-EOF
+    echo "⬇️ Downloading Nginx template..."
+    sudo curl -fsSL "$REPO_RAW/templates/react-template" -o "$TEMPLATE_PATH"
 else
     echo "✅ Nginx template already exists."
 fi
@@ -54,25 +44,15 @@ else
     echo "✅ Config file already exists at $CONFIG_FILE"
 fi
 
-# --- 5. Install ship script from repo ---
-if [ -f "scripts/ship" ]; then
-    echo "⚙️ Installing ship command..."
-    sudo cp scripts/ship "$SHIP_PATH"
-    sudo chmod +x "$SHIP_PATH"
-else
-    echo "❌ scripts/ship not found. Please run this installer from the repo root."
-    exit 1
-fi
+# --- 5. Download latest ship script ---
+echo "⬇️ Downloading ship script..."
+sudo curl -fsSL "$REPO_RAW/scripts/ship" -o "$SHIP_PATH"
+sudo chmod +x "$SHIP_PATH"
 
-# --- 6. Install ship-build script from repo ---
-if [ -f "scripts/ship-build" ]; then
-    echo "⚙️ Installing ship-build command..."
-    sudo cp scripts/ship-build "$SHIP_BUILD_PATH"
-    sudo chmod +x "$SHIP_BUILD_PATH"
-else
-    echo "❌ scripts/ship-build not found. Please run this installer from the repo root."
-    exit 1
-fi
+# --- 6. Download latest ship-build script ---
+echo "⬇️ Downloading ship-build script..."
+sudo curl -fsSL "$REPO_RAW/scripts/ship-build" -o "$SHIP_BUILD_PATH"
+sudo chmod +x "$SHIP_BUILD_PATH"
 
 echo "✅ Ship installed successfully for user: $CURRENT_USER"
 echo "ℹ️  No default domain set. You must use -d <domain> or set one with:"
