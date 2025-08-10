@@ -1,0 +1,11 @@
+server {
+    listen 80;
+    server_name SUBDOMAIN.BASEDOMAIN;
+
+    root /home/USERNAME/hosted/SUBDOMAIN;
+    index index.html;
+
+    location / {
+        try_files $uri /index.html;
+    }
+}
