@@ -3,6 +3,8 @@
 `ship` is a lightweight CLI tool to deploy static sites (React, Vue, etc.)  
 to an Ubuntu server with **Nginx** and **Let's Encrypt** SSL automatically.
 
+---
+
 ## ✨ Features
 - Deploy static sites to any subdomain
 - Automatic Let's Encrypt SSL
@@ -10,6 +12,7 @@ to an Ubuntu server with **Nginx** and **Let's Encrypt** SSL automatically.
 - Remove deployments easily
 - Track deployments and last SSL renewal date
 - Works with any domain (set default or pass `-d` each time)
+- Fully portable — no hardcoded paths
 
 ---
 
@@ -18,9 +21,7 @@ to an Ubuntu server with **Nginx** and **Let's Encrypt** SSL automatically.
 On your server:
 
 ```bash
-wget https://raw.githubusercontent.com/lyes2k/ship/main/ship-install.sh
-chmod +x ship-install.sh
-./ship-install.sh
+curl -fsSL https://raw.githubusercontent.com/lyes2k/ship/main/ship-install.sh | bash
 ```
 
 ---
@@ -42,6 +43,11 @@ ship-build -s demo -d example.com
 ### Set default domain
 ```bash
 ship --set-default-domain example.com
+```
+
+### Set email for SSL
+```bash
+ship --set-email you@example.com
 ```
 
 ### List deployments
@@ -78,11 +84,11 @@ sudo certbot renew --dry-run
 ---
 
 ## 🛠 Requirements
-- Ubuntu/Debian server
+- Ubuntu server
 - Nginx
 - Node.js (for `ship-build`)
 - Certbot
-- jq, rsync
+- jq, rsync, curl
 
 ---
 
