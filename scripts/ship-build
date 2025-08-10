@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "🚀 Building project..."
+npm run build || { echo "❌ Build failed"; exit 1; }
+ship "$@"
